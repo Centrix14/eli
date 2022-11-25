@@ -1,7 +1,8 @@
-#+title: ELI (Early (and Experimental) LN Interpter)
+#+title: ELI - Early (and Experimental) LN Interpter
 #+author: Centrix14
 #+startup: overview
 
+* Notes
 Должен быть класс =Parser=, описывающий состояние парсера. Он: хранит в
 себе буфер слова, выражения, источник данных, и проч. Источники данных
 могут быть следующие: файл, строка.
@@ -11,27 +12,96 @@
 позволяют вычислять какой-либо код после обработки очередного слова
 (или другого объекта).
 
-* Развитие ELI
-** Версии
+* ELI development
+** Versions
 *** 0.1
-- Парсит по словам
+- Pars by words
 
 *** 0.2
-- Парсит по последовательностям
+- Can pars sequenses
 
-** TODO Парсер [0/3]
-- [-] Реализовать класс =parser=
-- [ ] Реализовать функциональность парсинга по словам
-- [ ] Реализовать функциональность парсинга последовательностей
+** TODO Parser [0/3]
+- [-] Create =parser= class
+- [ ] Create pars by words
+- [ ] Create possibility for parsing of sequences
 
-* Парсер
-** Класс =parser=
+* System definitions
+** =eli= system definion
+#+name: eli system definition
+#+begin_src lisp :tangle eli.asd
+  (defsystem "eli"
+	  :description "ELI — Early (and Experimental) LN Interpreter"
+	  :version "0.0"
+	  :author "Centrix14"
+	  :maintainer "Centrix14"
+	  :homepage "https://github.com/Centrix14/eli"
+	  :licence "GNU GPL v3"
+	  :depends-on (:asdf)
+	  :components ((:file "src/parser/parser")))
+#+end_src
+
+** =eli= system loader
+#+name: eli system loader
+#+begin_src lisp :tangle eli.lisp
+  (require :asdf)
+
+  (asdf:load-asd (merge-pathnames "eli.asd" (uiop:getcwd)))
+  (asdf:load-system :eli)
+#+end_src
+
+** =eli= tests definition
+#+name: eli tests definition
+#+begin_src lisp :tangle eli-tests.asd
+  (defsystem "eli-tests"
+	  :description "ELI tests"
+	  :licence "GNU GPL v3"
+	  :depends-on (:asdf)
+	  :components ((:file "t/parser/pars-char")))
+#+end_src
+
+** =eli= tests loader
+#+name: eli tests loader
+#+begin_src lisp :tangle eli-tests.lisp
+  (require :asdf)
+
+  (asdf:load-asd (merge-pathnames "eli.asd" (uiop:getcwd)))
+  (asdf:load-asd (merge-pathnames "eli-tests.asd" (uiop:getcwd)))
+
+  (asdf:load-system :eli)
+  (asdf:load-system :eli-tests)
+#+end_src
+
+* Parser
+** =parser= package
+#+name: parser package
+#+begin_src lisp :tangle src/parser/parser.lisp
+  (defpackage :eli-parser
+	(:use :common-lisp)
+	(:export :parser
+			 :parser-buffer-word
+			 :parser-buffer-expression
+			 :parser-buffer-delimiter))
+#+end_src
+
+** =parser= class
+The =parser= class describes LN parser. It has following fileds:
+- =buffer-word= — a _string_ containing current word. It has corresponding
+  reader — =parser-buffer-word=.
+- =buffer-expression= — a _vector_ of _strings_ containing current
+  expression. It like =buffer-word= has corresponding reader —
+  =parser-buffer-expression=.
+- =buffer-delimiter= — a _string_ containing symbols that separate words.
+  Like other fileds, has reader — =parser-buffer-delimiter=.
+
 #+name: parser class
 #+begin_src lisp :tangle src/parser/parser.lisp
   (defclass parser ()
 	((buffer-word :reader parser-buffer-word
 				  :initarg :buffer-word
-				  :initform ""
+				  :initform (make-array 0
+										:fill-pointer 0
+										:adjustable t
+										:element-type 'character)
 				  :type string
 				  :documentation "The word buffer")
 	 (buffer-expression :reader parser-buffer-expression
@@ -46,6 +116,74 @@
 					   :initarg :buffer-delimiter
 					   :initform " "
 					   :type string
-					   :documentation "The buffer of delimiters")
-	 (:documentation "The parser class")))
+					   :documentation "The buffer of delimiters"))
+	(:documentation "The parser class"))
+#+end_src
+
+** =parser= class methods
+*** =pars-char= method
+The =pars-char= method provides low-level functionality of the parser.
+It takes only one character, and process it. Input characted may be
+_delimiter_ or _regular_.
+
+Important notes:
+- _Direct_ using of this method is *not recommended*.
+- This is a *pure* method: it is *not change* his arguments.
+
+#+name: pars-char method
+#+begin_src lisp :tangle src/parser/parser.lisp
+  (defmethod pars-char ((parser-object parser) char)
+	(with-slots (buffer-word buffer-expression buffer-delimiter) parser-object
+		(if (delimiterp parser-object char)
+			(pars-char-handle-delimiter parser-object)
+			(pars-char-handle-regular parser-object char)))
+	parser-object)
+#+end_src
+
+In goals of simplicity and beautiful method uses _inner functions_:
+=handle-delimiter= and =handle-regular=.
+
+The =handle-delimiter= function handles delimiters and returns new state
+of parser.
+
+#+name: pars-char-handle-delimiter function
+#+begin_src lisp :tangle src/parser/parser.lisp
+  (defun pars-char-handle-delimiter (parser-object)
+	(with-slots (buffer-word) parser-object
+	  (format t "word: ~a~%" buffer-word)
+	  (setf (fill-pointer buffer-word) 0)))
+#+end_src
+
+Like =handle-delimiter=, =handle-regular= handles a regular character and
+returns new state of parser.
+
+#+name: pars-char-handle-regular function
+#+begin_src lisp :tangle src/parser/parser.lisp
+  (defun pars-char-handle-regular (parser-object char)
+	(with-slots (buffer-word) parser-object
+	  (vector-push-extend char buffer-word)))
+#+end_src
+
+** Predicates
+*** =delimiterp=
+#+name: delimiterp predicate
+#+begin_src lisp :tangle src/parser/parser.lisp
+  (defun delimiterp (parser-object char)
+	(with-slots (buffer-delimiter) parser-object
+	  (if (position char buffer-delimiter)
+		  t
+		  nil)))
+#+end_src
+
+* tests
+** parser tests
+*** =pars-char= test
+#+name: pars-char test
+#+begin_src lisp :tangle t/parser/pars-char.lisp
+  (let ((test-parser
+		 (make-instance 'parser
+						:buffer-delimiter " "))
+		(test-string "abra cadabra babra "))
+	(loop for char across test-string do
+		 (setf test-parser (pars-char test-parser char))))
 #+end_src
