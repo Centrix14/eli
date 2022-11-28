@@ -1,0 +1,15 @@
+This is an LN programming language specification.
+Word /specification/ don't means /standard/.
+
+Created by Centrix14 (Artyom Zvyagin) at 28 XII - 28 XII 2022.
+
+* General provisions
+LN (*L* anguage of *N* ormal Markov algorithms) is a _rule-oriented_ and _evolutional_ programming language.
+
+** Rule-oriented programming
+Rule-oriented (RO) programming is a programming paradigm which fundament is normal algorithms. All programm, or it's parts, builded as combination of _substitution rules_ and _source states_.
+
+Typical RO programming languages is a _Thue_, _MarkovJunior_ and _REFAL_.
+
+** Evolutional programming
+Evolutionary programming is a programming paradigm in which a program is represented as a combination of rules (conditions) and one initial state (seed). Unlike RO programming, evolutionary programming represents a program as a developing organism, to each new state of which new rules are applied. The program can thus develop independently, regardless of the developer.
