@@ -116,7 +116,13 @@ The =parser= class describes LN parser. It has following fileds:
 					   :initarg :buffer-delimiter
 					   :initform " "
 					   :type string
-					   :documentation "The buffer of delimiters"))
+					   :documentation "The buffer of delimiters")
+	 (need-new-nesting-layer :reader parser-need-new-nesting-layer
+							 :initarg :need-new-nesting-layer
+							 :initform nil
+							 :type symbol
+							 :documentation
+							 "Indicates, that need to create new nesting layer"))
 	(:documentation "The parser class"))
 #+end_src
 
@@ -136,8 +142,7 @@ Important notes:
 	(with-slots (buffer-word buffer-expression buffer-delimiter) parser-object
 		(if (delimiterp parser-object char)
 			(pars-char-handle-delimiter parser-object)
-			(pars-char-handle-regular parser-object char)))
-	parser-object)
+			(pars-char-handle-regular parser-object char))))
 #+end_src
 
 In goals of simplicity and beautiful method uses _inner functions_:
@@ -149,9 +154,15 @@ of parser.
 #+name: pars-char-handle-delimiter function
 #+begin_src lisp :tangle src/parser/parser.lisp
   (defun pars-char-handle-delimiter (parser-object)
-	(with-slots (buffer-word) parser-object
-	  (format t "word: ~a~%" buffer-word)
-	  (setf (fill-pointer buffer-word) 0)))
+	(format t "word: ~a~%" (slot-value parser-object 'buffer-word))
+	(make-instance 'parser
+				   :buffer-word (make-array 0
+											:fill-pointer 0
+											:adjustable t
+											:element-type 'character)
+				   :buffer-expression (parser-buffer-expression parser-object)
+				   :buffer-delimiter (parser-buffer-delimiter parser-object)
+				   :need-new-nesting-layer (parser-need-new-nesting-layer parser-object)))
 #+end_src
 
 Like =handle-delimiter=, =handle-regular= handles a regular character and
@@ -160,8 +171,13 @@ returns new state of parser.
 #+name: pars-char-handle-regular function
 #+begin_src lisp :tangle src/parser/parser.lisp
   (defun pars-char-handle-regular (parser-object char)
-	(with-slots (buffer-word) parser-object
-	  (vector-push-extend char buffer-word)))
+	(make-instance 'parser
+				   :buffer-word (concatenate 'string
+											 (slot-value parser-object 'buffer-word)
+											 (string char))
+				   :buffer-expression (parser-buffer-expression parser-object)
+				   :buffer-delimiter (parser-buffer-delimiter parser-object)
+				   :need-new-nesting-layer (parser-need-new-nesting-layer parser-object)))
 #+end_src
 
 ** Predicates
@@ -175,7 +191,7 @@ returns new state of parser.
 		  nil)))
 #+end_src
 
-* tests
+* Tests
 ** parser tests
 *** =pars-char= test
 #+name: pars-char test
