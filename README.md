@@ -11,4 +11,4 @@ As you can see (i hope you can see), ELI written in Literal Programming techniqu
 2. In my oppinion, LP makes code more understandable and clear, than comments, clean code and another strange staff.
 
 ## Project status
-	Now ELI in deep development. I can code only in my free time, but since i become a student, i barely haven't free time.
+Now ELI in deep development. I can code only in my free time, but since i become a student, i barely haven't free time.
