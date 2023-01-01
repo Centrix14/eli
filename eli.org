@@ -26,18 +26,19 @@
 - [ ] Create possibility for parsing of sequences
 
 * System definitions
-** =eli= system definion
+** =eli= system definition
 #+name: eli system definition
 #+begin_src lisp :tangle eli.asd
   (defsystem "eli"
-	  :description "ELI — Early (and Experimental) LN Interpreter"
-	  :version "0.0"
-	  :author "Centrix14"
-	  :maintainer "Centrix14"
-	  :homepage "https://github.com/Centrix14/eli"
-	  :licence "GNU GPL v3"
-	  :depends-on (:asdf)
-	  :components ((:file "src/parser/parser")))
+    :description "ELI — Early (and Experimental) LN Interpreter"
+    :version "0.0"
+    :author "Centrix14"
+    :maintainer "Centrix14"
+    :homepage "https://github.com/Centrix14/eli"
+    :licence "GNU GPL v3"
+    :depends-on (:asdf)
+    :components ((:file "src/parser/parser")
+                 (:file "src/parser/auxiliary")))
 #+end_src
 
 ** =eli= system loader
@@ -53,10 +54,10 @@
 #+name: eli tests definition
 #+begin_src lisp :tangle eli-tests.asd
   (defsystem "eli-tests"
-	  :description "ELI tests"
-	  :licence "GNU GPL v3"
-	  :depends-on (:asdf)
-	  :components ((:file "t/parser/pars-char")))
+    :description "ELI tests"
+    :licence "GNU GPL v3"
+    :depends-on (:asdf)
+    :components ((:file "t/parser/pars-char")))
 #+end_src
 
 ** =eli= tests loader
@@ -76,11 +77,13 @@
 #+name: parser package
 #+begin_src lisp :tangle src/parser/parser.lisp
   (defpackage :eli-parser
-	(:use :common-lisp)
-	(:export :parser
-			 :parser-buffer-word
-			 :parser-buffer-expression
-			 :parser-buffer-delimiter))
+    (:use :common-lisp)
+    (:export :parser
+             :parser-buffer-word
+             :parser-buffer-expression
+             :parser-buffer-delimiter
+
+             :eval-nestings))
 #+end_src
 
 ** =parser= class
@@ -92,38 +95,57 @@ The =parser= class describes LN parser. It has following fileds:
   =parser-buffer-expression=.
 - =buffer-delimiter= — a _string_ containing symbols that separate words.
   Like other fileds, has reader — =parser-buffer-delimiter=.
+- =nesting-degree= — an _integer_ containing nesting degree of current
+  word (=buffer-word=). The lowest degree is 0. With each
+  =nesting-booster= nesting grow by 1, with each =nesting-reducer= —
+  shrinks by 1.
+- =nesting-booster= — a _string_, containing word, that increments =nesting-degree=
+- =nesting-reducer= — a string, containing word, that decrements =nesting-degree=
 
 #+name: parser class
 #+begin_src lisp :tangle src/parser/parser.lisp
   (defclass parser ()
-	((buffer-word :reader parser-buffer-word
-				  :initarg :buffer-word
-				  :initform (make-array 0
-										:fill-pointer 0
-										:adjustable t
-										:element-type 'character)
-				  :type string
-				  :documentation "The word buffer")
-	 (buffer-expression :reader parser-buffer-expression
-						:initarg :buffer-expression
-						:initform (make-array 0
-											  :fill-pointer 0
-											  :adjustable t
-											  :element-type 'string)
-						:type vector
-						:documentation "The expression buffer")
-	 (buffer-delimiter :reader parser-buffer-delimiter
-					   :initarg :buffer-delimiter
-					   :initform " "
-					   :type string
-					   :documentation "The buffer of delimiters")
-	 (need-new-nesting-layer :reader parser-need-new-nesting-layer
-							 :initarg :need-new-nesting-layer
-							 :initform nil
-							 :type symbol
-							 :documentation
-							 "Indicates, that need to create new nesting layer"))
-	(:documentation "The parser class"))
+    ;; buffers
+    ((buffer-word :reader parser-buffer-word
+                  :initarg :buffer-word
+                  :initform (make-array 0
+                                        :fill-pointer 0
+                                        :adjustable t
+                                        :element-type 'character)
+                  :type string
+                  :documentation "The word buffer")
+     (buffer-expression :reader parser-buffer-expression
+                        :initarg :buffer-expression
+                        :initform (make-array 0
+                                              :fill-pointer 0
+                                              :adjustable t
+                                              :element-type 'string)
+                        :type vector
+                        :documentation "The expression buffer")
+     (buffer-delimiter :reader parser-buffer-delimiter
+                       :initarg :buffer-delimiter
+                       :initform " "
+                       :type string
+                       :documentation "The buffer of delimiters")
+
+     ;; nesting
+     (nesting-degree :reader parser-nesting-degree
+                     :initarg :nesting-degree
+                     :initform 0
+                     :type integer
+                     :documentation "Indicates nesting degree of current word")
+     (nesting-booster :reader parser-nesting-booster
+                      :initarg :nesting-booster
+                      :initform "["
+                      :type string
+                      :documentation "Contains word, that increments nesting")
+     (nesting-reducer :reader parser-nesting-reducer
+                      :initarg :nesting-reducer
+                      :initform "]"
+                      :type string
+                      :documentation "Contains word, that decrements nesting"))
+
+    (:documentation "The parser class"))
 #+end_src
 
 ** =parser= class methods
@@ -139,45 +161,59 @@ Important notes:
 #+name: pars-char method
 #+begin_src lisp :tangle src/parser/parser.lisp
   (defmethod pars-char ((parser-object parser) char)
-	(with-slots (buffer-word buffer-expression buffer-delimiter) parser-object
-		(if (delimiterp parser-object char)
-			(pars-char-handle-delimiter parser-object)
-			(pars-char-handle-regular parser-object char))))
+    (with-slots (buffer-word buffer-expression buffer-delimiter) parser-object
+      (if (delimiterp parser-object char)
+          (pars-char-handle-delimiter parser-object)
+          (pars-char-handle-regular parser-object char))))
 #+end_src
-
+p
 In goals of simplicity and beautiful method uses _inner functions_:
 =handle-delimiter= and =handle-regular=.
 
+**** =pars-char-handle-delimiter= inner function
 The =handle-delimiter= function handles delimiters and returns new state
 of parser.
 
 #+name: pars-char-handle-delimiter function
 #+begin_src lisp :tangle src/parser/parser.lisp
   (defun pars-char-handle-delimiter (parser-object)
-	(format t "word: ~a~%" (slot-value parser-object 'buffer-word))
-	(make-instance 'parser
-				   :buffer-word (make-array 0
-											:fill-pointer 0
-											:adjustable t
-											:element-type 'character)
-				   :buffer-expression (parser-buffer-expression parser-object)
-				   :buffer-delimiter (parser-buffer-delimiter parser-object)
-				   :need-new-nesting-layer (parser-need-new-nesting-layer parser-object)))
+    (multiple-value-bind (current-nesting-degree updated-nesting-degree)
+        (eval-nestings parser-object)
+      (make-instance 'parser
+                     :buffer-word (make-array 0
+                                              :fill-pointer 0
+                                              :adjustable t
+                                              :element-type 'character)
+                     :buffer-expression (concatenate
+                                         'vector
+                                         (parser-buffer-expression parser-object)
+                                         (vector
+                                          (list current-nesting-degree
+                                                (parser-buffer-word parser-object))))
+                     :buffer-delimiter (parser-buffer-delimiter parser-object)
+
+                     :nesting-degree updated-nesting-degree
+                     :nesting-booster (parser-nesting-booster parser-object)
+                     :nesting-reducer (parser-nesting-reducer parser-object))))
 #+end_src
 
+**** =pars-char-handle-regular= inner function
 Like =handle-delimiter=, =handle-regular= handles a regular character and
 returns new state of parser.
 
 #+name: pars-char-handle-regular function
 #+begin_src lisp :tangle src/parser/parser.lisp
   (defun pars-char-handle-regular (parser-object char)
-	(make-instance 'parser
-				   :buffer-word (concatenate 'string
-											 (slot-value parser-object 'buffer-word)
-											 (string char))
-				   :buffer-expression (parser-buffer-expression parser-object)
-				   :buffer-delimiter (parser-buffer-delimiter parser-object)
-				   :need-new-nesting-layer (parser-need-new-nesting-layer parser-object)))
+    (make-instance 'parser
+                   :buffer-word (concatenate 'string
+                                             (slot-value parser-object 'buffer-word)
+                                             (string char))
+                   :buffer-expression (parser-buffer-expression parser-object)
+                   :buffer-delimiter (parser-buffer-delimiter parser-object)
+
+                   :nesting-degree (parser-nesting-degree parser-object)
+                   :nesting-booster (parser-nesting-booster parser-object)
+                   :nesting-reducer (parser-nesting-reducer parser-object)))
 #+end_src
 
 ** Predicates
@@ -185,10 +221,28 @@ returns new state of parser.
 #+name: delimiterp predicate
 #+begin_src lisp :tangle src/parser/parser.lisp
   (defun delimiterp (parser-object char)
-	(with-slots (buffer-delimiter) parser-object
-	  (if (position char buffer-delimiter)
-		  t
-		  nil)))
+    (with-slots (buffer-delimiter) parser-object
+      (if (position char buffer-delimiter)
+          t
+          nil)))
+#+end_src
+
+** Auxiliary functions
+*** =eval-nestings= function
+#+name: eval-nesting auxiliary function
+#+begin_src lisp :tangle src/parser/auxiliary.lisp
+  (defun eval-nestings (parser-object)
+    (with-slots (buffer-word nesting-degree
+                 nesting-booster nesting-reducer) parser-object
+      (cond
+        ((string= buffer-word nesting-booster)
+         (values nesting-degree (1+ nesting-degree)))
+
+        ((string= buffer-word nesting-reducer)
+         (values (1- nesting-degree) (1- nesting-degree)))
+
+        (t
+         (values nesting-degree nesting-degree)))))
 #+end_src
 
 * Tests
@@ -197,9 +251,10 @@ returns new state of parser.
 #+name: pars-char test
 #+begin_src lisp :tangle t/parser/pars-char.lisp
   (let ((test-parser
-		 (make-instance 'parser
-						:buffer-delimiter " "))
-		(test-string "abra cadabra babra "))
-	(loop for char across test-string do
-		 (setf test-parser (pars-char test-parser char))))
+          (make-instance 'parser
+                         :buffer-delimiter " "))
+        (test-string "abra [ cadabra [ var danbra [ zabra ] ] babra ] "))
+    (loop for char across test-string do
+      (setf test-parser (pars-char test-parser char)))
+    (format t "~a~%" (parser-buffer-expression test-parser)))
 #+end_src
