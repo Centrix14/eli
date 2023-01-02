@@ -1,3 +1,7 @@
+<p align="center">
+	<img src="https://github.com/logix-org/OpenPencil/blob/main/logo_512.svg"/>
+</p>
+
 # ELI
 ELI is an Early (and Experimental) LN Interpreter.
 
