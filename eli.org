@@ -4,10 +4,14 @@
 
 * ELI development
 ** Stages
-*** TODO Parser [3/3]
+*** TODO Parser [3/7]
 - [X] Create =parser= class
 - [X] Create pars words
 - [X] Create pars sequences
+- [ ] Decompose =parser= class
+- [ ] Add print-object to all classes
+- [ ] Add streams
+- [ ] Add =pars-string= and =pars-file= methods
 
 *** TODO Rule processing system [0/3]
 - [ ] Create =rule= class
