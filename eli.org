@@ -14,16 +14,16 @@
 
 * ELI development
 ** Versions
-*** 0.1
-- Pars by words
-
-*** 0.2
-- Can pars sequenses
-
-** TODO Parser [3/3]
+** Stages
+*** TODO Parser [3/3]
 - [X] Create =parser= class
-- [X] Create pars by words
-- [X] Create possibility for parsing of sequences
+- [X] Create pars words
+- [X] Create pars sequences
+
+*** TODO Rule processing system [0/3]
+- [ ] Create =rule= class
+- [ ] Create =rule-storage= class
+- [ ] Add tasks
 
 * System definitions
 ** =eli= system definition
