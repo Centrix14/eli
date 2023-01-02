@@ -13,7 +13,6 @@
 (или другого объекта).
 
 * ELI development
-** Versions
 ** Stages
 *** TODO Parser [3/3]
 - [X] Create =parser= class
