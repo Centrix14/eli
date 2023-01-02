@@ -1,5 +1,5 @@
 <p align="center">
-	<img src="https://github.com/logix-org/OpenPencil/blob/main/logo/logo_512.png"/>
+	<img src="https://github.com/Centrix14/eli/blob/dev/logo/logo_512.png"/>
 </p>
 
 # ELI
