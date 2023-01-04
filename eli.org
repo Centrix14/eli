@@ -1,17 +1,16 @@
-#+title: ELI - Early (and Experimental) LN Interpter
+#+title: ELI - Early (and Experimental) LN Interpreter
 #+author: Centrix14
 #+startup: overview
 
 * ELI development
 ** Stages
-*** TODO Parser [3/7]
+*** DONE Parser [6/6]
 - [X] Create =parser= class
 - [X] Create pars words
 - [X] Create pars sequences
-- [ ] Decompose =parser= class
-- [ ] Add print-object to all classes
-- [ ] Add streams
-- [ ] Add =pars-string= and =pars-file= methods
+- [X] Add print-object to all classes
+- [X] Add streams
+- [X] Add pars-stream method
 
 *** TODO Rule processing system [0/3]
 - [ ] Create =rule= class
@@ -50,7 +49,8 @@
     :description "ELI tests"
     :licence "GNU GPL v3"
     :depends-on (:asdf :eli)
-    :components ((:file "t/parser/pars-char")))
+    :components ((:file "t/parser/pars-char")
+                 (:file "t/parser/pars-stream")))
 #+end_src
 
 ** =eli= tests loader
@@ -162,17 +162,7 @@ The =parser= class describes LN parser. It has following fileds:
                       :initarg :nesting-reducer
                       :initform "]"
                       :type string
-                      :documentation "Contains word, that decrements nesting")
-
-     ;; sources
-     (source-type :reader parser-source-type
-                  :initarg :source-type
-                  :initform 'string
-                  :type symbol
-                  :documentation "Describes type of the source from which data is taken")
-     (source :reader parser-source
-             :initarg :source
-             :documentation "Stores the data source"))
+                      :documentation "Contains word, that decrements nesting"))
 
     (:documentation "The parser class"))
 #+end_src
@@ -213,6 +203,18 @@ it with following data:
 Then, we print value of each slot using readers.
 
 ** =parser= class methods
+*** =print-object= method for =parser= class
+#+begin_src lisp :tangle src/parser/parser.lisp
+  (defmethod print-object ((parser-object parser) stream)
+    (format stream "~a ~a ~a ~a ~a ~a"
+            (parser-buffer-word parser-object)
+            (parser-buffer-expression parser-object)
+            (parser-buffer-delimiter parser-object)
+            (parser-nesting-degree parser-object)
+            (parser-nesting-booster parser-object)
+            (parser-nesting-reducer parser-object)))
+#+end_src
+
 *** =pars-char= method
 The =pars-char= method provides low-level functionality of the parser
 (see [[* =parser= class]]). It takes only one character, and process it.
@@ -298,6 +300,16 @@ returns new state of parser.
                    :nesting-reducer (parser-nesting-reducer parser-object)))
 #+end_src
 
+*** =pars-stream= method
+#+begin_src lisp :tangle src/parser/parser.lisp
+  (defmethod pars-stream ((parser-object parser) stream)
+    (loop with c = (read-char stream nil 'the-end)
+          while (not (eql c 'the-end)) do
+            (setf parser-object (pars-char parser-object c))
+            (setf c (read-char stream nil 'the-end)))
+    (pars-char parser-object #\Space))
+#+end_src
+
 ** Predicates
 *** =delimiterp=
 #+name: delimiterp predicate
@@ -360,5 +372,14 @@ Note: parameters returning in this order: =current-nesting-degree= =updated-nest
         (test-string "abra [ cadabra [ var danbra [ zabra ] ] babra ] "))
     (loop for char across test-string do
       (setf test-parser (pars-char test-parser char)))
-    (format t "~a~%" (parser-buffer-expression test-parser)))
+    (format t "~a~%" test-parser))
+#+end_src
+
+*** =pars-stream= test
+#+begin_src lisp :tangle t/parser/pars-stream.lisp
+  (let ((test-parser
+          (make-instance 'parser)))
+    (with-input-from-string (stream "abra cadabra")
+      (format t "~a~%"
+              (pars-stream test-parser stream))))
 #+end_src
