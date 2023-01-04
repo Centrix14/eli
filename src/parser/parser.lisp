@@ -50,6 +50,15 @@
 
   (:documentation "The parser class"))
 
+(defmethod print-object ((parser-object parser) stream)
+  (format stream "~a ~a ~a ~a ~a ~a"
+          (parser-buffer-word parser-object)
+          (parser-buffer-expression parser-object)
+          (parser-buffer-delimiter parser-object)
+          (parser-nesting-degree parser-object)
+          (parser-nesting-booster parser-object)
+          (parser-nesting-reducer parser-object)))
+
 (defmethod pars-char ((parser-object parser) char)
   (with-slots (buffer-word buffer-expression buffer-delimiter) parser-object
     (if (delimiterp parser-object char)
@@ -87,6 +96,13 @@
                  :nesting-degree (parser-nesting-degree parser-object)
                  :nesting-booster (parser-nesting-booster parser-object)
                  :nesting-reducer (parser-nesting-reducer parser-object)))
+
+(defmethod pars-stream ((parser-object parser) stream)
+  (loop with c = (read-char stream nil 'the-end)
+        while (not (eql c 'the-end)) do
+          (setf parser-object (pars-char parser-object c))
+          (setf c (read-char stream nil 'the-end)))
+  (pars-char parser-object #\Space))
 
 (defun delimiterp (parser-object char)
   (with-slots (buffer-delimiter) parser-object
