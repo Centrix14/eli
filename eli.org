@@ -162,7 +162,17 @@ The =parser= class describes LN parser. It has following fileds:
                       :initarg :nesting-reducer
                       :initform "]"
                       :type string
-                      :documentation "Contains word, that decrements nesting"))
+                      :documentation "Contains word, that decrements nesting")
+
+     ;; sources
+     (source-type :reader parser-source-type
+                  :initarg :source-type
+                  :initform 'string
+                  :type symbol
+                  :documentation "Describes type of the source from which data is taken")
+     (source :reader parser-source
+             :initarg :source
+             :documentation "Stores the data source"))
 
     (:documentation "The parser class"))
 #+end_src
