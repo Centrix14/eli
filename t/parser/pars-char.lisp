@@ -4,4 +4,4 @@
       (test-string "abra [ cadabra [ var danbra [ zabra ] ] babra ] "))
   (loop for char across test-string do
     (setf test-parser (pars-char test-parser char)))
-  (format t "~a~%" (parser-buffer-expression test-parser)))
+  (format t "~a~%" test-parser))
