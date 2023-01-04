@@ -4,4 +4,6 @@
   :depends-on (:asdf :eli)
   :components ((:file "examples/parser-class")
                (:file "examples/pars-char")
-               (:file "examples/delimiterp")))
+               (:file "examples/delimiterp")
+               (:file "examples/print-object")
+               (:file "examples/pars-stream")))
