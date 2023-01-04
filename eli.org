@@ -73,7 +73,9 @@
     :depends-on (:asdf :eli)
     :components ((:file "examples/parser-class")
                  (:file "examples/pars-char")
-                 (:file "examples/delimiterp")))
+                 (:file "examples/delimiterp")
+                 (:file "examples/print-object")
+                 (:file "examples/pars-stream")))
 #+end_src
 
 ** =eli= examples loader
@@ -204,6 +206,9 @@ Then, we print value of each slot using readers.
 
 ** =parser= class methods
 *** =print-object= method for =parser= class
+This is a standard method for all classes. =print-object= describes the
+way to print an instance of some class to screen.
+
 #+begin_src lisp :tangle src/parser/parser.lisp
   (defmethod print-object ((parser-object parser) stream)
     (format stream "~a ~a ~a ~a ~a ~a"
@@ -213,6 +218,15 @@ Then, we print value of each slot using readers.
             (parser-nesting-degree parser-object)
             (parser-nesting-booster parser-object)
             (parser-nesting-reducer parser-object)))
+#+end_src
+
+<<print-object usage example>>:
+#+begin_src lisp :tangle examples/print-object.lisp
+  (let ((test-parser
+          (make-instance 'parser
+                         :buffer-word "This is a word."
+                         :buffer-delimiter ",. ")))
+    (format t "~%~%print-object example~%~a~%" test-parser))
 #+end_src
 
 *** =pars-char= method
@@ -301,6 +315,12 @@ returns new state of parser.
 #+end_src
 
 *** =pars-stream= method
+This is a common method to pars LN expressions. It can pars strings
+and files.
+
+Important note: this method is *pure*, in other words it returns new
+state of parser instead of changing it.
+
 #+begin_src lisp :tangle src/parser/parser.lisp
   (defmethod pars-stream ((parser-object parser) stream)
     (loop with c = (read-char stream nil 'the-end)
@@ -308,6 +328,15 @@ returns new state of parser.
             (setf parser-object (pars-char parser-object c))
             (setf c (read-char stream nil 'the-end)))
     (pars-char parser-object #\Space))
+#+end_src
+
+<<pars-stream usage example>>:
+#+begin_src lisp :tangle examples/pars-stream.lisp
+  (let ((test-parser
+          (make-instance 'parser)))
+    (with-input-from-string (stream "my LN expression")
+      (format t "~%~%pars-stream example~%~a~%"
+              (pars-stream test-parser stream))))
 #+end_src
 
 ** Predicates
