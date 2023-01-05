@@ -4,13 +4,14 @@
 
 * ELI development
 ** Stages
-*** DONE Parser [6/6]
+*** DONE Parser [7/7]
 - [X] Create =parser= class
 - [X] Create pars words
 - [X] Create pars sequences
 - [X] Add print-object to all classes
 - [X] Add streams
 - [X] Add pars-stream method
+- [X] Refactor parser, remove OOP
 
 *** TODO Rule processing system [0/3]
 - [ ] Create =rule= class
@@ -101,6 +102,16 @@ If end of stream has been reached, function returns =nil=.
 As you can see, =read-next-word= use internal function, that makes all
 magic of parsing. Please, don't use it in your code, be a good boys.
 
+Here you can see a =buffer= — vector, that store readed word, =c= — a
+variable, storing readed char.
+
+The logic of function is following:
+1. Until end of stream has been reached, or separator has been reached
+   and word was readed (this need to avoid returning void words) do:
+2. Store character to buffer, if it's not a separator.
+3. Read another char, save it to =c=.
+4. In the end, when word has been readed, return it.
+
 #+begin_src lisp :tangle src/parser/parser.lisp
   (defun %read-next-word% (stream separators)
     (let ((buffer (make-array 0
@@ -123,6 +134,9 @@ magic of parsing. Please, don't use it in your code, be a good boys.
       buffer))
 #+end_src
 
+*** Example
+And here you can see an example of usage of this function.
+
 <<read-next-word usage example>>:
 
 #+begin_src lisp :tangle examples/read-next-word.lisp
@@ -136,6 +150,13 @@ magic of parsing. Please, don't use it in your code, be a good boys.
               (format t "~a~%" word)
               (setf word (read-next-word stream :separators seps)))))
 #+end_src
+
+In this example we create a string =str=, with ="word1 word2"= contents,
+create a vector of separators, named =seps=, and then read words from
+=str= with the help of =with-input-from-string= (remember: =read-next-word=
+work with streams, not with files or strings). Reading is a loop, that
+will end when =read-next-word= will return =nil= — a special value, that
+indicates ending of stream.
 
 ** Predicates
 *** =separatorp=
