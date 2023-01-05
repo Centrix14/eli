@@ -93,7 +93,7 @@ separators — a string, or vector of characters.
 If end of stream has been reached, function returns =nil=.
 
 #+begin_src lisp :tangle src/parser/parser.lisp
-  (defun read-next-word (stream &key (separators " "))
+  (defun read-next-word (stream &optional (separators " "))
     (if (end-of-stream-p stream)
         nil
         (%read-next-word% stream separators)))
@@ -145,10 +145,10 @@ And here you can see an example of usage of this function.
                        #\Newline
                        #\Tab)))
     (with-input-from-string (stream str)
-      (loop with word = (read-next-word stream :separators seps)
+      (loop with word = (read-next-word stream seps)
             until (null word) do
               (format t "~a~%" word)
-              (setf word (read-next-word stream :separators seps)))))
+              (setf word (read-next-word stream seps)))))
 #+end_src
 
 In this example we create a string =str=, with ="word1 word2"= contents,
@@ -195,10 +195,9 @@ indicates ending of stream.
                       #\Newline
                       #\Tab)))
     (with-input-from-string (stream str)
-      (loop with word = (read-next-word stream
-                                        :separators seps)
+      (loop with word = (read-next-word stream seps)
             until (null word)
             do
                (format t "~a~%" word)
-               (setf word (read-next-word stream :separators seps)))))
+               (setf word (read-next-word stream seps)))))
 #+end_src
