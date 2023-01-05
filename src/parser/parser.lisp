@@ -1,4 +1,4 @@
-(defun read-next-word (stream &key (separators " "))
+(defun read-next-word (stream &optional (separators " "))
   (if (end-of-stream-p stream)
       nil
       (%read-next-word% stream separators)))
