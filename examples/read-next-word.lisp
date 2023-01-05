@@ -3,7 +3,7 @@
                      #\Newline
                      #\Tab)))
   (with-input-from-string (stream str)
-    (loop with word = (read-next-word stream :separators seps)
+    (loop with word = (read-next-word stream seps)
           until (null word) do
             (format t "~a~%" word)
-            (setf word (read-next-word stream :separators seps)))))
+            (setf word (read-next-word stream seps)))))
