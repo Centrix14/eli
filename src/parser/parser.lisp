@@ -34,7 +34,7 @@
         (result nil))
 
     (if (eql c 'the-end)
-        (setf result t))
+        (return-from end-of-stream-p t))
 
     (unread-char c stream)
-    result))
+    nil))
