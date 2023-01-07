@@ -4,7 +4,7 @@
 
 * ELI development
 ** Stages
-*** DONE Parser [7/7]
+*** TODO Parser [7/8]
 - [X] Create =parser= class
 - [X] Create pars words
 - [X] Create pars sequences
@@ -12,6 +12,7 @@
 - [X] Add streams
 - [X] Add pars-stream method
 - [X] Refactor parser, remove OOP
+- [ ] Add strings parsing
 
 *** TODO Rule processing system [0/3]
 - [ ] Create =rule= class
@@ -31,7 +32,8 @@
     :licence "GNU GPL v3"
     :depends-on (:asdf)
     :components ((:file "src/parser/parser")
-                 (:file "src/parser/auxiliary")))
+                 (:file "src/interpreter/main")
+                 (:file "src/interpreter/auxiliary")))
 #+end_src
 
 ** =eli= system loader
@@ -50,7 +52,8 @@
     :description "ELI tests"
     :licence "GNU GPL v3"
     :depends-on (:asdf :eli)
-    :components ((:file "t/parser/read-next-word")))
+    :components ((:file "t/parser/read-next-word")
+                 (:file "t/interpreter/ln-eval-stream")))
 #+end_src
 
 ** =eli= tests loader
@@ -173,12 +176,82 @@ indicates ending of stream.
     (let ((c
             (read-char stream nil 'the-end))
           (result nil))
-    
+
       (if (eql c 'the-end)
-          (setf result t))
-    
+          (return-from end-of-stream-p t))
+
       (unread-char c stream)
-      result))
+      nil))
+#+end_src
+
+* Interpreter
+** =ln-eval-stream= function
+#+begin_src lisp :tangle src/interpreter/main.lisp
+  (defun ln-eval-stream (stream)
+    (let ((expression (make-array 0
+                                  :fill-pointer 0
+                                  :adjustable t
+                                  :element-type 'list))
+          (word "")
+          (nesting-degree 0)
+          (separators (vector #\Space
+                              #\Newline
+                              #\Tab)))
+
+      (setf word (read-next-word stream separators))
+      (loop until (null word) do
+        (multiple-value-bind (updated-nesting word-nesting)
+            (get-nesting word nesting-degree)
+
+          (vector-push-extend (make-it-element word word-nesting)
+                              expression)
+          (setf nesting-degree updated-nesting))
+
+        (setf word (read-next-word stream separators)))
+
+      (print-it expression)))
+#+end_src
+
+** Auxiliary functions
+*** =get-nesting= function
+#+begin_src lisp :tangle src/interpreter/auxiliary.lisp
+  (defun get-nesting (word current-nesting)
+    (cond
+      ((string= word "[")
+       (values (1+ current-nesting) current-nesting))
+
+      ((string= word "]")
+       (values (1- current-nesting) (1- current-nesting)))
+
+      (t
+       (values current-nesting current-nesting))))
+#+end_src
+
+*** =make-it-element= function
+#+begin_src lisp :tangle src/interpreter/auxiliary.lisp
+  (defun make-it-element (word nesting-degree)
+    (list nesting-degree word))
+#+end_src
+
+*** =print-it= function
+#+begin_src lisp :tangle src/interpreter/auxiliary.lisp
+  (defun print-it (tree)
+    (loop for element across tree do
+      (format t "~a~a~%"
+              (print-it-get-nesting-string (first element))
+              (second element))))
+#+end_src
+
+**** =print-it-get-nesting-string= inner function
+#+begin_src lisp :tangle src/interpreter/auxiliary.lisp
+  (defun print-it-get-nesting-string (nesting-degree)
+    (loop with result = (make-array 0
+                                    :fill-pointer 0
+                                    :adjustable t
+                                    :element-type 'character)
+          repeat nesting-degree do
+            (vector-push-extend #\Tab result)
+          finally (return-from print-it-get-nesting-string result)))
 #+end_src
 
 * Tests
@@ -194,10 +267,22 @@ indicates ending of stream.
         (seps (vector #\Space
                       #\Newline
                       #\Tab)))
+
     (with-input-from-string (stream str)
+      (format t "read-next-word test~%")
       (loop with word = (read-next-word stream seps)
             until (null word)
             do
                (format t "~a~%" word)
                (setf word (read-next-word stream seps)))))
+#+end_src
+
+** interpreter tests
+*** =ln-eval-stream= test
+#+begin_src lisp :tangle t/interpreter/ln-eval-stream.lisp
+  (with-open-file (stream "examples/ln/if.ln"
+                          :direction :input
+                          :if-does-not-exist :error)
+    (format t "~%~%ln-eval-stream test~%")
+    (ln-eval-stream stream))
 #+end_src
