@@ -7,4 +7,5 @@
   :licence "GNU GPL v3"
   :depends-on (:asdf)
   :components ((:file "src/parser/parser")
-               (:file "src/parser/auxiliary")))
+               (:file "src/interpreter/main")
+               (:file "src/interpreter/auxiliary")))
