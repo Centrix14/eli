@@ -1,0 +1,5 @@
+atom while
+
+rule [ while .seq:cond .seq:body ]
+     [ rule [ while 1 .seq ]
+            [ while cond body ] ]
