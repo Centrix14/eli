@@ -7,7 +7,9 @@ rule [ while .seq:cond .seq:body ]
       (seps (vector #\Space
                     #\Newline
                     #\Tab)))
+
   (with-input-from-string (stream str)
+    (format t "read-next-word test~%")
     (loop with word = (read-next-word stream seps)
           until (null word)
           do
