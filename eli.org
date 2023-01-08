@@ -262,6 +262,17 @@ This function returns 2 parameters:
        (values current-nesting current-nesting))))
 #+end_src
 
+<<get-nesting usage example>>:
+
+#+begin_src lisp :tangle examples/interpreter/get-nesting.lisp
+  (multiple-value-bind (updated-nesting current-nesting) (get-nesting "[" 0)
+    (format t "~a ~a~%" updated-nesting current-nesting))
+#+end_src
+
+Since =get-nesting= is a trivial function, usage example it simple and
+clear. We just bind values returned by function to =updated-nesting= and
+=current-nesting= variables, and then use it.
+
 *** =make-it-element= function
 #+begin_src lisp :tangle src/interpreter/auxiliary.lisp
   (defun make-it-element (word nesting-degree)
