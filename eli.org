@@ -4,7 +4,7 @@
 
 * ELI development
 ** Stages
-*** TODO Parser [7/8]
+*** DONE Parser [8/8]
 - [X] Create =parser= class
 - [X] Create pars words
 - [X] Create pars sequences
@@ -12,7 +12,7 @@
 - [X] Add streams
 - [X] Add pars-stream method
 - [X] Refactor parser, remove OOP
-- [ ] Add strings parsing
+- [X] Add strings parsing
 
 *** TODO Rule processing system [0/3]
 - [ ] Create =rule= class
@@ -110,9 +110,9 @@ Here you can see a =buffer= — vector, that store readed word, =c= — a
 variable, storing readed char.
 
 The logic of function is following:
-1. Until end of stream has been reached, or separator has been reached
-   and word was readed (this need to avoid returning void words) do:
-2. Store character to buffer, if it's not a separator.
+1. While =word-readed-p= returns =nil=, read and perform data from stream.
+2. Store character to buffer, if =store-char-p= returns =t= (in other
+   words, if it's not a separator or quoting is active).
 3. Read another char, save it to =c=.
 4. In the end, when word has been readed, return it.
 
