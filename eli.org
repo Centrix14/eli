@@ -306,10 +306,22 @@ In this example we print simple test tree on the screen.
 #+end_src
 
 *** =make-it-element= function
+This function is pretty simple and small: it just create new element
+of index-tree. That's all folks!
+
 #+begin_src lisp :tangle src/interpreter/auxiliary.lisp
   (defun make-it-element (word nesting-degree)
     (list nesting-degree word))
 #+end_src
+
+<<make-it-element usage example>>:
+
+#+begin_src lisp :tangle examples/interpreter/make-it-element.lisp
+  (format t "~a~%" (make-it-element "my-word" 0))
+#+end_src
+
+In this example we create new it element containing word ="my-word"= and
+nesting-degree =0=.
 
 * Tests
 ** parser tests
