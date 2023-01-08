@@ -231,6 +231,18 @@ of all next words.
 As you can see, in the end of work function calls =print-it=. This is
 just a test, don't on this seriously.
 
+<<ln-eval-stream usage example>>:
+
+#+begin_src lisp :tangle examples/interpreter/ln-eval-stream.lisp
+  (with-open-file (stream "../ln/if.ln"
+                          :direction :input
+                          :if-does-not-exist :error)
+    (ln-eval-stream stream))
+#+end_src
+
+In this example we open file for reading, and then, give it to
+=ln-eval-string=, nothing unusual, as you see.
+
 ** Auxiliary functions
 *** =get-nesting= function
 This function returns 2 parameters:
