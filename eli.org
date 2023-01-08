@@ -273,13 +273,10 @@ Since =get-nesting= is a trivial function, usage example it simple and
 clear. We just bind values returned by function to =updated-nesting= and
 =current-nesting= variables, and then use it.
 
-*** =make-it-element= function
-#+begin_src lisp :tangle src/interpreter/auxiliary.lisp
-  (defun make-it-element (word nesting-degree)
-    (list nesting-degree word))
-#+end_src
-
 *** =print-it= function
+=print-it= is a function, that prints index-tree on the screen. In
+printing it uses tabs, to show nesting. Nothing interest, you know.
+
 #+begin_src lisp :tangle src/interpreter/auxiliary.lisp
   (defun print-it (tree)
     (loop for element across tree do
@@ -287,6 +284,14 @@ clear. We just bind values returned by function to =updated-nesting= and
               (print-it-get-nesting-string (first element))
               (second element))))
 #+end_src
+
+<<print-it usage example>>:
+
+#+begin_src lisp :tangle examples/interpreter/print-it.lisp
+  (print-it #((0 "zero") (1 "one") (2 "two") (3 "three")))
+#+end_src
+
+In this example we print simple test tree on the screen.
 
 **** =print-it-get-nesting-string= inner function
 #+begin_src lisp :tangle src/interpreter/auxiliary.lisp
@@ -298,6 +303,12 @@ clear. We just bind values returned by function to =updated-nesting= and
           repeat nesting-degree do
             (vector-push-extend #\Tab result)
           finally (return-from print-it-get-nesting-string result)))
+#+end_src
+
+*** =make-it-element= function
+#+begin_src lisp :tangle src/interpreter/auxiliary.lisp
+  (defun make-it-element (word nesting-degree)
+    (list nesting-degree word))
 #+end_src
 
 * Tests
