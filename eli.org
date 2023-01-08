@@ -123,15 +123,15 @@ The logic of function is following:
                               :adjustable t
                               :element-type 'character))
           (c
-            (read-char stream nil 'the-end)))
+            (read-char stream nil 'the-end))
+          (is-quoting nil))
 
-      (loop until (or
-                   (eql c 'the-end)
-                   (and (separatorp separators c)
-                        (> (length buffer) 0)))
+      (loop until (word-readed-p separators c buffer is-quoting)
             do
-               (unless (separatorp separators c)
-                   (vector-push-extend c buffer))
+               (if (char= c #\")
+                   (setf is-quoting (not is-quoting)))
+               (when (store-char-p separators c is-quoting)
+                 (vector-push-extend c buffer))
 
                (setf c (read-char stream nil 'the-end)))
 
@@ -201,6 +201,25 @@ been reached, and otherwise =nil=.
 
 Oh, you know, i'm too lazy to write another trivial example. Let's be
 good boys and will live without it.
+
+*** =word-readed-p=
+#+begin_src lisp :tangle src/parser/parser.lisp
+  (defun word-readed-p (separators c buffer is-quoting)
+    (and
+     (not is-quoting)
+     (or
+      (eql c 'the-end)
+      (and (separatorp separators c)
+           (> (length buffer) 0)))))
+#+end_src
+
+*** =store-char-p=
+#+begin_src lisp :tangle src/parser/parser.lisp
+  (defun store-char-p (separators c is-quoting)
+    (if is-quoting
+        t
+        (not (separatorp separators c))))
+#+end_src
 
 * Interpreter
 ** =ln-eval-stream= function
