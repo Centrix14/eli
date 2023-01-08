@@ -163,6 +163,9 @@ indicates ending of stream.
 
 ** Predicates
 *** =separatorp=
+=separatorp= predicate is similar to removed =delimiterp=. It returns =t=
+when given =char= is a separator, and =nil= in other case.
+
 #+begin_src lisp :tangle src/parser/parser.lisp
   (defun separatorp (separators char)
     (if (position char separators)
@@ -170,7 +173,18 @@ indicates ending of stream.
         nil))
 #+end_src
 
+<<seperatorp usage example>>:
+
+#+begin_src lisp :tangle examples/parser/separatorp.lisp
+  (format t "~a~%" (separatorp " ,." #\,))
+#+end_src
+
+I think here is all clear.
+
 *** =end-of-stream-p=
+=end-of-stream-p= predicate has talking name: it returns =t= if EOF has
+been reached, and otherwise =nil=.
+
 #+begin_src lisp :tangle src/parser/parser.lisp
   (defun end-of-stream-p (stream)
     (let ((c
@@ -183,6 +197,9 @@ indicates ending of stream.
       (unread-char c stream)
       nil))
 #+end_src
+
+Oh, you know, i'm too lazy to write another trivial example. Let's be
+good boys and will live without it.
 
 * Interpreter
 ** =ln-eval-stream= function
