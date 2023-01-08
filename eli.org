@@ -186,6 +186,22 @@ indicates ending of stream.
 
 * Interpreter
 ** =ln-eval-stream= function
+This function interprets code that coming from some stream.
+
+It use these internal variables:
+- =expression= — a readed expression
+- =word= — a readed word
+- =separators= — actually, this is just a constant, that make code more
+  simple (i can just write "separators" instead of whole vector).
+
+And while there is some words in stream, it reads they, and store in
+=exprssion=.
+
+Also, there is some interest logic: an =updated= and =word= nesting. What
+is it? =word-nesting= is a nesting degree of current word, word that
+will be stored to expression. And =updated-nesting= is a nesting degree
+of all next words.
+
 #+begin_src lisp :tangle src/interpreter/main.lisp
   (defun ln-eval-stream (stream)
     (let ((expression (make-array 0
@@ -211,6 +227,9 @@ indicates ending of stream.
 
       (print-it expression)))
 #+end_src
+
+As you can see, in the end of work function calls =print-it=. This is
+just a test, don't on this seriously.
 
 ** Auxiliary functions
 *** =get-nesting= function
