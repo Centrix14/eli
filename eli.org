@@ -233,6 +233,10 @@ just a test, don't on this seriously.
 
 ** Auxiliary functions
 *** =get-nesting= function
+This function returns 2 parameters:
+- =updated-nesting= — nesting degree of all next words
+- =current-nesting= (or =word-nesting=) — nesting degree of current word
+
 #+begin_src lisp :tangle src/interpreter/auxiliary.lisp
   (defun get-nesting (word current-nesting)
     (cond
