@@ -142,7 +142,7 @@ And here you can see an example of usage of this function.
 
 <<read-next-word usage example>>:
 
-#+begin_src lisp :tangle examples/read-next-word.lisp
+#+begin_src lisp :tangle examples/parser/read-next-word.lisp
   (let ((str "word1 word2")
         (seps (vector #\Space
                        #\Newline
