@@ -9,15 +9,15 @@
                             :adjustable t
                             :element-type 'character))
         (c
-          (read-char stream nil 'the-end)))
+          (read-char stream nil 'the-end))
+        (is-quoting nil))
 
-    (loop until (or
-                 (eql c 'the-end)
-                 (and (separatorp separators c)
-                      (> (length buffer) 0)))
+    (loop until (word-readed-p separators c buffer is-quoting)
           do
-             (unless (separatorp separators c)
-                 (vector-push-extend c buffer))
+             (if (char= c #\")
+                 (setf is-quoting (not is-quoting)))
+             (when (store-char-p separators c is-quoting)
+               (vector-push-extend c buffer))
 
              (setf c (read-char stream nil 'the-end)))
 
@@ -38,3 +38,16 @@
 
     (unread-char c stream)
     nil))
+
+(defun word-readed-p (separators c buffer is-quoting)
+  (and
+   (not is-quoting)
+   (or
+    (eql c 'the-end)
+    (and (separatorp separators c)
+         (> (length buffer) 0)))))
+
+(defun store-char-p (separators c is-quoting)
+  (if is-quoting
+      t
+      (not (separatorp separators c))))
