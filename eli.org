@@ -199,8 +199,18 @@ been reached, and otherwise =nil=.
       nil))
 #+end_src
 
-Oh, you know, i'm too lazy to write another trivial example. Let's be
-good boys and will live without it.
+<<enf-of-stream usage example>>:
+
+#+begin_src lisp :tangle examples/parser/end-of-stream.lisp
+  (with-open-file (stream "separatorp.lisp"
+                          :direction :input
+                          :if-does-not-exist :error)
+    (loop with c until (end-of-stream-p stream) do
+      (setf c (read-char stream))
+      (write-char c)))
+#+end_src
+
+In this example we print contents of specified file until EOF will be reached.
 
 *** =word-readed-p=
 #+begin_src lisp :tangle src/parser/parser.lisp
