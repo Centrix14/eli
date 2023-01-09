@@ -199,7 +199,7 @@ been reached, and otherwise =nil=.
       nil))
 #+end_src
 
-<<enf-of-stream usage example>>:
+<<end-of-stream usage example>>:
 
 #+begin_src lisp :tangle examples/parser/end-of-stream.lisp
   (with-open-file (stream "separatorp.lisp"
@@ -213,6 +213,13 @@ been reached, and otherwise =nil=.
 In this example we print contents of specified file until EOF will be reached.
 
 *** =word-readed-p=
+This predicate return =t= if word has been readed. That happens in this
+conditions:
+1. Here is no quoting.
+2. Here is EOF.
+3. Here is a separator.
+4. Here is some word in buffer.
+
 #+begin_src lisp :tangle src/parser/parser.lisp
   (defun word-readed-p (separators c buffer is-quoting)
     (and
