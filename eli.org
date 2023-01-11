@@ -213,8 +213,8 @@ been reached, and otherwise =nil=.
 In this example we print contents of specified file until EOF will be reached.
 
 *** =word-readed-p=
-This predicate return =t= if word has been readed. That happens in this
-conditions:
+This predicate returns =t= if word has been readed. That happens in when
+all of the following statements are true.
 1. Here is no quoting.
 2. Here is EOF.
 3. Here is a separator.
@@ -222,15 +222,21 @@ conditions:
 
 #+begin_src lisp :tangle src/parser/parser.lisp
   (defun word-readed-p (separators c buffer is-quoting)
-    (and
-     (not is-quoting)
-     (or
-      (eql c 'the-end)
-      (and (separatorp separators c)
-           (> (length buffer) 0)))))
+    (if (eql c 'the-end)
+        t
+        (and
+         (not is-quoting)
+         (separatorp separators c)
+         (> (length buffer) 0))))
 #+end_src
 
 *** =store-char-p=
+This predicate returns =t= if char storing is necessary, and =nil=
+otherwise. Char storing is necessary first || second statements are
+true.
+1. Here is a quoting.
+2. Char is not a separator.
+
 #+begin_src lisp :tangle src/parser/parser.lisp
   (defun store-char-p (separators c is-quoting)
     (if is-quoting
