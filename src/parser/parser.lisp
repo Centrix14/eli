@@ -40,12 +40,12 @@
     nil))
 
 (defun word-readed-p (separators c buffer is-quoting)
-  (and
-   (not is-quoting)
-   (or
-    (eql c 'the-end)
-    (and (separatorp separators c)
-         (> (length buffer) 0)))))
+  (if (eql c 'the-end)
+      t
+      (and
+       (not is-quoting)
+       (separatorp separators c)
+       (> (length buffer) 0))))
 
 (defun store-char-p (separators c is-quoting)
   (if is-quoting
